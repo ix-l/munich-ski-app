@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alpine Snowfall Tracker - Munich Region (Live Data)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ice-blue: #E8F4F8;
+            --glacier: #B8D8E8;
+            --deep-blue: #1A3A52;
+            --alpine-green: #2D5F4C;
+            --snow-white: #FEFEFE;
+            --shadow-blue: #0A1E2E;
+            --accent-orange: #FF6B35;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Manrope', sans-serif;
+            background: linear-gradient(135deg, var(--ice-blue) 0%, var(--glacier) 50%, #D4E8F0 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(184, 216, 232, 0.4) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .snowflake {
+            position: fixed;
+            top: -10px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1rem;
+            animation: fall linear infinite;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+            }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 5rem;
+            color: var(--deep-blue);
+            letter-spacing: 0.05em;
+            text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.8);
+            margin-bottom: 0.5rem;
+            line-height: 1;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--alpine-green);
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .info-banner {
+            background: #FFF9E6;
+            border: 3px solid #FFB800;
+            padding: 1rem;
+            margin: 1.5rem auto;
+            max-width: 800px;
+            font-size: 0.9rem;
+            color: var(--deep-blue);
+            line-height: 1.6;
+        }
+
+        .info-banner strong {
+            color: #FFB800;
+        }
+
+        .info-banner code {
+            background: rgba(0,0,0,0.1);
+            padding: 0.2rem 0.4rem;
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+
+        .api-badge {
+            display: inline-block;
+            background: var(--deep-blue);
+            color: var(--snow-white);
+            padding: 0.4rem 0.8rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            margin-top: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            animation: fadeIn 1s ease-out 0.3s both;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .sort-btn {
+            background: var(--snow-white);
+            border: 3px solid var(--deep-blue);
+            padding: 0.9rem 1.8rem;
+            font-family: 'Manrope', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--deep-blue);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sort-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--deep-blue);
+            transition: left 0.3s ease;
+            z-index: -1;
+        }
+
+        .sort-btn:hover::before {
+            left: 0;
+        }
+
+        .sort-btn:hover {
+            color: var(--snow-white);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(26, 58, 82, 0.2);
+        }
+
+        .sort-btn.active {
+            background: var(--deep-blue);
+            color: var(--snow-white);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            font-size: 1.2rem;
+            color: var(--deep-blue);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .error {
+            background: #FFE5E5;
+            border: 3px solid #CC0000;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            color: #CC0000;
+            font-weight: 600;
+        }
+
+        .resort-grid {
+            display: grid;
+            gap: 1.5rem;
+            animation: fadeInUp 0.8s ease-out 0.5s both;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .resort-card {
+            background: var(--snow-white);
+            border-radius: 0;
+            padding: 1.8rem;
+            display: grid;
+            grid-template-columns: 60px 1fr auto;
+            gap: 1.5rem;
+            align-items: center;
+            box-shadow: 
+                8px 8px 0 var(--deep-blue),
+                0 4px 20px rgba(26, 58, 82, 0.1);
+            transition: all 0.3s ease;
+            border: 3px solid var(--deep-blue);
+            position: relative;
+        }
+
+        .resort-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 6px;
+            height: 100%;
+            background: var(--accent-orange);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .resort-card:hover {
+            transform: translate(-4px, -4px);
+            box-shadow: 
+                12px 12px 0 var(--deep-blue),
+                0 8px 30px rgba(26, 58, 82, 0.15);
+        }
+
+        .resort-card:hover::before {
+            opacity: 1;
+        }
+
+        .resort-card.loading-data {
+            opacity: 0.6;
+        }
+
+        .flag {
+            font-size: 3rem;
+            line-height: 1;
+            text-align: center;
+        }
+
+        .resort-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .location {
+            font-size: 0.85rem;
+            color: var(--alpine-green);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .resort-name {
+            font-size: 1.5rem;
+            color: var(--deep-blue);
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        .distance {
+            font-size: 0.9rem;
+            color: var(--deep-blue);
+            opacity: 0.6;
+            font-weight: 500;
+        }
+
+        .snowfall-display {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.3rem;
+        }
+
+        .snowfall-amount {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3.5rem;
+            color: var(--deep-blue);
+            line-height: 1;
+            letter-spacing: 0.02em;
+        }
+
+        .snowfall-label {
+            font-size: 0.75rem;
+            color: var(--alpine-green);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            font-weight: 600;
+        }
+
+        .last-updated {
+            text-align: center;
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            color: var(--alpine-green);
+            opacity: 0.8;
+            font-weight: 500;
+        }
+
+        .refresh-btn {
+            display: inline-block;
+            margin-top: 1rem;
+            background: var(--alpine-green);
+            color: var(--snow-white);
+            border: none;
+            padding: 0.7rem 1.5rem;
+            font-family: 'Manrope', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            background: var(--deep-blue);
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 3rem;
+            }
+
+            .resort-card {
+                grid-template-columns: 50px 1fr;
+                gap: 1rem;
+                padding: 1.3rem;
+            }
+
+            .snowfall-display {
+                grid-column: 2;
+                text-align: left;
+                align-items: flex-start;
+                margin-top: 0.5rem;
+            }
+
+            .flag {
+                font-size: 2.5rem;
+            }
+
+            .snowfall-amount {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ALPINE SNOWFALL</h1>
+            <div class="subtitle">3-Hour Radius from Munich</div>
+            <div class="api-badge">🌐 Live Data: Open-Meteo API</div>
+        </header>
+
+        <div class="info-banner" id="infoBanner">
+            <strong>📋 Important:</strong> If you see "Unable to fetch data" errors, this file needs to be hosted online to work properly. 
+            The API won't work when viewing locally (<code>file://</code> protocol). 
+            <br><strong>Quick fix:</strong> Upload to GitHub Pages, Netlify, or Vercel (all free!) and it will work perfectly.
+        </div>
+
+        <div class="controls">
+            <button class="sort-btn active" onclick="sortBy('snowfall')">Most Snow</button>
+            <button class="sort-btn" onclick="sortBy('distance')">Closest First</button>
+        </div>
+
+        <div id="loadingMessage" class="loading">Loading live snowfall data from European weather services...</div>
+        <div id="errorMessage" class="error" style="display: none;"></div>
+        <div class="resort-grid" id="resortGrid"></div>
+
+        <div class="last-updated">
+            <div id="lastUpdated"></div>
+            <button class="refresh-btn" onclick="fetchSnowfallData()">↻ Refresh Data</button>
+        </div>
+    </div>
+
+    <script>
+        // Ski resort data with coordinates for API calls
+        const resorts = [
+            { country: '🇩🇪', countryName: 'Germany', location: 'Garmisch-Partenkirchen', name: 'Zugspitze', distance: 55, lat: 47.4211, lon: 10.9856 },
+            { country: '🇩🇪', countryName: 'Germany', location: 'Berchtesgaden', name: 'Jenner', distance: 93, lat: 47.6333, lon: 12.9833 },
+            { country: '🇩🇪', countryName: 'Germany', location: 'Oberaudorf', name: 'Sudelfeld', distance: 48, lat: 47.6944, lon: 12.1389 },
+            { country: '🇦🇹', countryName: 'Austria', location: 'Tirol', name: 'Kitzbühel', distance: 75, lat: 47.4467, lon: 12.3917 },
+            { country: '🇦🇹', countryName: 'Austria', location: 'Tirol', name: 'Sölden', distance: 102, lat: 46.9692, lon: 11.0042 },
+            { country: '🇦🇹', countryName: 'Austria', location: 'Salzburg', name: 'Saalbach-Hinterglemm', distance: 88, lat: 47.3889, lon: 12.6347 },
+            { country: '🇦🇹', countryName: 'Austria', location: 'Tirol', name: 'Mayrhofen', distance: 68, lat: 47.1658, lon: 11.8628 },
+            { country: '🇦🇹', countryName: 'Austria', location: 'Tirol', name: 'Innsbruck Nordkette', distance: 95, lat: 47.3103, lon: 11.3839 },
+            { country: '🇦🇹', countryName: 'Austria', location: 'Tirol', name: 'Zillertal Arena', distance: 72, lat: 47.2333, lon: 11.9000 },
+            { country: '🇩🇪', countryName: 'Germany', location: 'Lenggries', name: 'Brauneck', distance: 42, lat: 47.6636, lon: 11.5761 },
+            { country: '🇩🇪', countryName: 'Germany', location: 'Bayrischzell', name: 'Wendelstein', distance: 50, lat: 47.7044, lon: 12.0131 },
+            { country: '🇦🇹', countryName: 'Austria', location: 'Tirol', name: 'Stubai Glacier', distance: 108, lat: 47.0089, lon: 11.1178 },
+            { country: '🇮🇹', countryName: 'Italy', location: 'South Tyrol', name: 'Kronplatz', distance: 115, lat: 46.7392, lon: 11.9547 },
+            { country: '🇩🇪', countryName: 'Germany', location: 'Mittenwald', name: 'Karwendel', distance: 58, lat: 47.4419, lon: 11.2625 },
+            { country: '🇦🇹', countryName: 'Austria', location: 'Salzburg', name: 'Obertauern', distance: 97, lat: 47.2556, lon: 13.5500 }
+        ];
+
+        let currentSort = 'snowfall';
+        let resortsWithData = [];
+        let debugInfo = [];
+
+        async function fetchSnowfallData() {
+            const loadingEl = document.getElementById('loadingMessage');
+            const errorEl = document.getElementById('errorMessage');
+            const gridEl = document.getElementById('resortGrid');
+            
+            loadingEl.style.display = 'block';
+            errorEl.style.display = 'none';
+            gridEl.innerHTML = '';
+            debugInfo = [];
+
+            console.log('🔄 Starting snowfall data fetch...');
+
+            try {
+                // Test with just the first resort to diagnose issues
+                const testResort = resorts[0];
+                const testUrl = `https://api.open-meteo.com/v1/forecast?latitude=${testResort.lat}&longitude=${testResort.lon}&hourly=snowfall&timezone=Europe/Berlin&forecast_days=3`;
+                
+                console.log('🧪 Testing API with first resort:', testResort.name);
+                console.log('📍 URL:', testUrl);
+                
+                try {
+                    const testResponse = await fetch(testUrl);
+                    console.log('✅ API Response Status:', testResponse.status, testResponse.statusText);
+                    
+                    const testData = await testResponse.json();
+                    console.log('📊 Sample API Response:', testData);
+                    
+                    if (testData.hourly && testData.hourly.snowfall) {
+                        console.log('❄️ Snowfall data found:', testData.hourly.snowfall.slice(0, 5));
+                    } else {
+                        console.warn('⚠️ No snowfall data in response');
+                    }
+                } catch (testError) {
+                    console.error('❌ Test API call failed:', testError);
+                    errorEl.innerHTML = `
+                        <strong>API Connection Test Failed</strong><br>
+                        Error: ${testError.message}<br><br>
+                        <em>This usually happens when:</em><br>
+                        • Viewing the file locally (file:// protocol) - needs to be hosted<br>
+                        • CORS/network restrictions<br>
+                        • Ad blocker or firewall blocking api.open-meteo.com<br><br>
+                        <strong>Solution:</strong> Upload this file to GitHub Pages, Netlify, or Vercel to make it work.
+                    `;
+                    errorEl.style.display = 'block';
+                    loadingEl.style.display = 'none';
+                    return;
+                }
+
+                // Fetch data for all resorts with detailed logging
+                const promises = resorts.map(async (resort, index) => {
+                    try {
+                        const url = `https://api.open-meteo.com/v1/forecast?latitude=${resort.lat}&longitude=${resort.lon}&hourly=snowfall&timezone=Europe/Berlin&forecast_days=3`;
+                        
+                        console.log(`🏔️ [${index + 1}/${resorts.length}] Fetching: ${resort.name}`);
+                        
+                        const response = await fetch(url);
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        
+                        const data = await response.json();
+                        
+                        // Calculate total snowfall in next 72 hours (in cm)
+                        const snowfallData = data.hourly.snowfall || [];
+                        const totalSnowfallCm = snowfallData.reduce((sum, val) => sum + (val || 0), 0);
+                        
+                        // Convert cm to inches
+                        const totalSnowfallInches = totalSnowfallCm / 2.54;
+                        
+                        console.log(`✅ ${resort.name}: ${totalSnowfallInches.toFixed(1)}"`);
+                        
+                        debugInfo.push(`✅ ${resort.name}: ${totalSnowfallInches.toFixed(1)}"`);
+                        
+                        return {
+                            ...resort,
+                            snowfall: parseFloat(totalSnowfallInches.toFixed(1)),
+                            success: true
+                        };
+                    } catch (err) {
+                        console.error(`❌ ${resort.name}:`, err.message);
+                        debugInfo.push(`❌ ${resort.name}: ${err.message}`);
+                        
+                        return {
+                            ...resort,
+                            snowfall: 0,
+                            error: true,
+                            errorMessage: err.message
+                        };
+                    }
+                });
+
+                resortsWithData = await Promise.all(promises);
+                loadingEl.style.display = 'none';
+                
+                // Check if all failed
+                const successCount = resortsWithData.filter(r => r.success).length;
+                const failCount = resortsWithData.filter(r => r.error).length;
+                
+                console.log(`📈 Results: ${successCount} succeeded, ${failCount} failed`);
+                
+                // Hide info banner if data loaded successfully
+                if (successCount > 0) {
+                    const banner = document.getElementById('infoBanner');
+                    if (banner) banner.style.display = 'none';
+                }
+                
+                if (successCount === 0) {
+                    errorEl.innerHTML = `
+                        <strong>⚠️ Unable to fetch snowfall data for any resort</strong><br><br>
+                        <em>Possible causes:</em><br>
+                        • File opened locally (file:// protocol) - the API won't work<br>
+                        • Network/firewall blocking api.open-meteo.com<br>
+                        • Ad blocker interference<br><br>
+                        <strong>✅ Solution:</strong> Host this file on GitHub Pages, Netlify, or Vercel.<br>
+                        The API will work perfectly once hosted online.<br><br>
+                        <details>
+                            <summary style="cursor: pointer; font-weight: bold;">🔍 Show Debug Info</summary>
+                            <pre style="font-size: 0.85em; margin-top: 0.5rem; text-align: left; overflow-x: auto;">${debugInfo.join('\n')}</pre>
+                        </details>
+                    `;
+                    errorEl.style.display = 'block';
+                    return;
+                } else if (failCount > 0) {
+                    errorEl.innerHTML = `
+                        <strong>⚠️ Partial data loaded</strong><br>
+                        ${successCount} resorts loaded successfully, ${failCount} failed<br>
+                        <small>Failed resorts will show "N/A"</small>
+                    `;
+                    errorEl.style.display = 'block';
+                }
+
+                sortBy(currentSort);
+                updateTimestamp();
+                
+            } catch (error) {
+                console.error('💥 Fatal error:', error);
+                loadingEl.style.display = 'none';
+                errorEl.innerHTML = `
+                    <strong>Critical Error</strong><br>
+                    ${error.message}<br><br>
+                    Please open browser console (F12) for more details.
+                `;
+                errorEl.style.display = 'block';
+            }
+        }
+
+        function sortBy(type) {
+            currentSort = type;
+            
+            // Update active button
+            document.querySelectorAll('.sort-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Sort resorts
+            const sorted = [...resortsWithData].sort((a, b) => {
+                if (type === 'snowfall') {
+                    return b.snowfall - a.snowfall;
+                } else {
+                    return a.distance - b.distance;
+                }
+            });
+
+            renderResorts(sorted);
+        }
+
+        function renderResorts(sortedResorts) {
+            const grid = document.getElementById('resortGrid');
+            grid.innerHTML = '';
+
+            sortedResorts.forEach((resort, index) => {
+                const card = document.createElement('div');
+                card.className = 'resort-card';
+                card.style.animationDelay = `${index * 0.05}s`;
+                
+                let snowfallDisplay;
+                if (resort.error) {
+                    snowfallDisplay = `
+                        <span style="font-size: 1.2rem; color: #CC0000;" title="${resort.errorMessage || 'Failed to load'}">
+                            ⚠️ N/A
+                        </span>
+                    `;
+                } else if (resort.success) {
+                    const snowIcon = resort.snowfall > 5 ? '🌨️' : resort.snowfall > 1 ? '❄️' : '☁️';
+                    snowfallDisplay = `
+                        <div class="snowfall-amount" title="72-hour forecast">${resort.snowfall}" ${snowIcon}</div>
+                    `;
+                } else {
+                    snowfallDisplay = `<div class="snowfall-amount">${resort.snowfall}"</div>`;
+                }
+                
+                card.innerHTML = `
+                    <div class="flag">${resort.country}</div>
+                    <div class="resort-info">
+                        <div class="location">${resort.location}, ${resort.countryName}</div>
+                        <div class="resort-name">${resort.name}</div>
+                        <div class="distance">${resort.distance} km from Munich</div>
+                    </div>
+                    <div class="snowfall-display">
+                        ${snowfallDisplay}
+                        <div class="snowfall-label">72hr Forecast</div>
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+            });
+        }
+
+        function updateTimestamp() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: 'Europe/Berlin'
+            };
+            document.getElementById('lastUpdated').textContent = 
+                `Last updated: ${now.toLocaleDateString('en-US', options)} CET`;
+        }
+
+        function createSnowflakes() {
+            const snowflakeCount = 30;
+            for (let i = 0; i < snowflakeCount; i++) {
+                const snowflake = document.createElement('div');
+                snowflake.className = 'snowflake';
+                snowflake.textContent = '❄';
+                snowflake.style.left = `${Math.random() * 100}%`;
+                snowflake.style.animationDuration = `${Math.random() * 10 + 10}s`;
+                snowflake.style.animationDelay = `${Math.random() * 5}s`;
+                snowflake.style.opacity = Math.random() * 0.6 + 0.2;
+                snowflake.style.fontSize = `${Math.random() * 1 + 0.5}rem`;
+                document.body.appendChild(snowflake);
+            }
+        }
+
+        // Initialize
+        createSnowflakes();
+        fetchSnowfallData();
+    </script>
+</body>
+</html>
