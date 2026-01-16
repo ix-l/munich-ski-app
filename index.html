@@ -477,23 +477,23 @@
     </div>
 
     <script>
-        // Ski resort data with coordinates for API calls
+        // Ski resort data with coordinates and max elevations for API calls
         const resorts = [
-            { country: '🇩🇪', countryName: 'Germany', location: 'Garmisch-Partenkirchen', name: 'Zugspitze', distance: 55, lat: 47.4211, lon: 10.9856 },
-            { country: '🇩🇪', countryName: 'Germany', location: 'Berchtesgaden', name: 'Jenner', distance: 93, lat: 47.6333, lon: 12.9833 },
-            { country: '🇩🇪', countryName: 'Germany', location: 'Oberaudorf', name: 'Sudelfeld', distance: 48, lat: 47.6944, lon: 12.1389 },
-            { country: '🇦🇹', countryName: 'Austria', location: 'Tirol', name: 'Kitzbühel', distance: 75, lat: 47.4467, lon: 12.3917 },
-            { country: '🇦🇹', countryName: 'Austria', location: 'Tirol', name: 'Sölden', distance: 102, lat: 46.9692, lon: 11.0042 },
-            { country: '🇦🇹', countryName: 'Austria', location: 'Salzburg', name: 'Saalbach-Hinterglemm', distance: 88, lat: 47.3889, lon: 12.6347 },
-            { country: '🇦🇹', countryName: 'Austria', location: 'Tirol', name: 'Mayrhofen', distance: 68, lat: 47.1658, lon: 11.8628 },
-            { country: '🇦🇹', countryName: 'Austria', location: 'Tirol', name: 'Innsbruck Nordkette', distance: 95, lat: 47.3103, lon: 11.3839 },
-            { country: '🇦🇹', countryName: 'Austria', location: 'Tirol', name: 'Zillertal Arena', distance: 72, lat: 47.2333, lon: 11.9000 },
-            { country: '🇩🇪', countryName: 'Germany', location: 'Lenggries', name: 'Brauneck', distance: 42, lat: 47.6636, lon: 11.5761 },
-            { country: '🇩🇪', countryName: 'Germany', location: 'Bayrischzell', name: 'Wendelstein', distance: 50, lat: 47.7044, lon: 12.0131 },
-            { country: '🇦🇹', countryName: 'Austria', location: 'Tirol', name: 'Stubai Glacier', distance: 108, lat: 47.0089, lon: 11.1178 },
-            { country: '🇮🇹', countryName: 'Italy', location: 'South Tyrol', name: 'Kronplatz', distance: 115, lat: 46.7392, lon: 11.9547 },
-            { country: '🇩🇪', countryName: 'Germany', location: 'Mittenwald', name: 'Karwendel', distance: 58, lat: 47.4419, lon: 11.2625 },
-            { country: '🇦🇹', countryName: 'Austria', location: 'Salzburg', name: 'Obertauern', distance: 97, lat: 47.2556, lon: 13.5500 }
+            { country: '🇩🇪', countryName: 'Germany', location: 'Garmisch-Partenkirchen', name: 'Zugspitze', maxElevation: 2720, distance: 55, lat: 47.4211, lon: 10.9856 },
+            { country: '🇩🇪', countryName: 'Germany', location: 'Berchtesgaden', name: 'Jenner', maxElevation: 1874, distance: 93, lat: 47.6333, lon: 12.9833 },
+            { country: '🇩🇪', countryName: 'Germany', location: 'Oberaudorf', name: 'Sudelfeld', maxElevation: 1563, distance: 48, lat: 47.6944, lon: 12.1389 },
+            { country: '🇦🇹', countryName: 'Austria', location: 'Tirol', name: 'Kitzbühel', maxElevation: 2000, distance: 75, lat: 47.4467, lon: 12.3917 },
+            { country: '🇦🇹', countryName: 'Austria', location: 'Tirol', name: 'Sölden', maxElevation: 3340, distance: 102, lat: 46.9692, lon: 11.0042 },
+            { country: '🇦🇹', countryName: 'Austria', location: 'Salzburg', name: 'Saalbach-Hinterglemm', maxElevation: 2096, distance: 88, lat: 47.3889, lon: 12.6347 },
+            { country: '🇦🇹', countryName: 'Austria', location: 'Tirol', name: 'Mayrhofen', maxElevation: 2500, distance: 68, lat: 47.1658, lon: 11.8628 },
+            { country: '🇦🇹', countryName: 'Austria', location: 'Tirol', name: 'Innsbruck Nordkette', maxElevation: 2334, distance: 95, lat: 47.3103, lon: 11.3839 },
+            { country: '🇦🇹', countryName: 'Austria', location: 'Tirol', name: 'Zillertal Arena', maxElevation: 2500, distance: 72, lat: 47.2333, lon: 11.9000 },
+            { country: '🇩🇪', countryName: 'Germany', location: 'Lenggries', name: 'Brauneck', maxElevation: 1712, distance: 42, lat: 47.6636, lon: 11.5761 },
+            { country: '🇩🇪', countryName: 'Germany', location: 'Bayrischzell', name: 'Wendelstein', maxElevation: 1838, distance: 50, lat: 47.7044, lon: 12.0131 },
+            { country: '🇦🇹', countryName: 'Austria', location: 'Tirol', name: 'Stubai Glacier', maxElevation: 3210, distance: 108, lat: 47.0089, lon: 11.1178 },
+            { country: '🇮🇹', countryName: 'Italy', location: 'South Tyrol', name: 'Kronplatz', maxElevation: 2275, distance: 115, lat: 46.7392, lon: 11.9547 },
+            { country: '🇩🇪', countryName: 'Germany', location: 'Mittenwald', name: 'Karwendel', maxElevation: 2244, distance: 58, lat: 47.4419, lon: 11.2625 },
+            { country: '🇦🇹', countryName: 'Austria', location: 'Salzburg', name: 'Obertauern', maxElevation: 2313, distance: 97, lat: 47.2556, lon: 13.5500 }
         ];
 
         let currentSort = 'snowfall';
@@ -548,7 +548,7 @@
             try {
                 // Test with just the first resort to diagnose issues
                 const testResort = resorts[0];
-                const testUrl = `https://api.open-meteo.com/v1/forecast?latitude=${testResort.lat}&longitude=${testResort.lon}&current=temperature_2m,weather_code,snow_depth&hourly=snowfall&daily=snowfall_sum&timezone=Europe/Berlin&forecast_days=7&past_days=14`;
+                const testUrl = `https://api.open-meteo.com/v1/forecast?latitude=${testResort.lat}&longitude=${testResort.lon}&current=temperature_2m,weather_code&hourly=snowfall&daily=snowfall_sum&timezone=Europe/Berlin&forecast_days=7&past_days=14`;
                 
                 console.log('🧪 Testing API with first resort:', testResort.name);
                 console.log('📍 URL:', testUrl);
@@ -584,8 +584,8 @@
                 // Fetch data for all resorts with detailed logging
                 const promises = resorts.map(async (resort, index) => {
                     try {
-                        // Updated API call with current conditions, snow depth, and historical data
-                        const url = `https://api.open-meteo.com/v1/forecast?latitude=${resort.lat}&longitude=${resort.lon}&current=temperature_2m,weather_code,snow_depth&hourly=snowfall&daily=snowfall_sum&timezone=Europe/Berlin&forecast_days=7&past_days=14`;
+                        // Updated API call with current conditions and historical data (no snow_depth)
+                        const url = `https://api.open-meteo.com/v1/forecast?latitude=${resort.lat}&longitude=${resort.lon}&current=temperature_2m,weather_code&hourly=snowfall&daily=snowfall_sum&timezone=Europe/Berlin&forecast_days=7&past_days=14`;
                         
                         console.log(`🏔️ [${index + 1}/${resorts.length}] Fetching: ${resort.name}`);
                         
@@ -600,7 +600,6 @@
                         // Current conditions
                         const currentTemp = data.current.temperature_2m;
                         const weatherCode = data.current.weather_code;
-                        const snowDepth = data.current.snow_depth || 0;
                         
                         // Calculate 72-hour snowfall forecast
                         const snowfallData = data.hourly.snowfall || [];
@@ -625,7 +624,7 @@
                             daysSinceSnow = 14;
                         }
                         
-                        console.log(`✅ ${resort.name}: ${totalSnowfallInches.toFixed(1)}", ${currentTemp}°C, ${snowDepth}cm depth`);
+                        console.log(`✅ ${resort.name}: ${totalSnowfallInches.toFixed(1)}", ${currentTemp}°C`);
                         
                         debugInfo.push(`✅ ${resort.name}: ${totalSnowfallInches.toFixed(1)}"`);
                         
@@ -634,7 +633,6 @@
                             snowfall: parseFloat(totalSnowfallInches.toFixed(1)),
                             currentTemp: Math.round(currentTemp),
                             weatherCode: weatherCode,
-                            snowDepth: Math.round(snowDepth / 2.54), // Convert cm to inches
                             daysSinceSnow: daysSinceSnow,
                             success: true
                         };
@@ -647,7 +645,6 @@
                             snowfall: 0,
                             currentTemp: null,
                             weatherCode: null,
-                            snowDepth: 0,
                             daysSinceSnow: null,
                             error: true,
                             errorMessage: err.message
@@ -780,10 +777,6 @@
                                 <div style="font-size: 0.75rem; color: var(--alpine-green);">(${tempF}°F)</div>
                             </div>
                             <div class="snow-stats">
-                                <div class="snow-stat" title="Current snow depth on mountain">
-                                    <span>❄️ Snowpack:</span>
-                                    <span class="snow-stat-value">${resort.snowDepth}"</span>
-                                </div>
                                 <div class="snow-stat" title="Days since last significant snowfall">
                                     <span>📅 Last snow:</span>
                                     <span class="snow-stat-value">${resort.daysSinceSnow === 0 ? 'Today' : resort.daysSinceSnow === 1 ? 'Yesterday' : resort.daysSinceSnow >= 14 ? '14+ days' : resort.daysSinceSnow + ' days ago'}</span>
@@ -803,7 +796,7 @@
                     <div class="flag">${resort.country}</div>
                     <div class="resort-info">
                         <div class="location">${resort.location}, ${resort.countryName}</div>
-                        <div class="resort-name">${resort.name}</div>
+                        <div class="resort-name">${resort.name} (${resort.maxElevation}m)</div>
                         <div class="distance">${resort.distance} km from Munich</div>
                     </div>
                     ${currentConditionsHTML}
