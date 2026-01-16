@@ -411,8 +411,8 @@
         </div>
 
         <div class="controls">
-            <button class="sort-btn active" onclick="sortBy('snowfall')">Most Snow</button>
-            <button class="sort-btn" onclick="sortBy('distance')">Closest First</button>
+            <button class="sort-btn active" onclick="sortBy('snowfall', event)">Most Snow</button>
+            <button class="sort-btn" onclick="sortBy('distance', event)">Closest First</button>
         </div>
 
         <div id="loadingMessage" class="loading">Loading live snowfall data from European weather services...</div>
@@ -596,12 +596,23 @@
             }
         }
 
-        function sortBy(type) {
+        function sortBy(type, event) {
             currentSort = type;
             
-            // Update active button
-            document.querySelectorAll('.sort-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            // Update active button only if called from a button click
+            if (event && event.target) {
+                document.querySelectorAll('.sort-btn').forEach(btn => btn.classList.remove('active'));
+                event.target.classList.add('active');
+            } else {
+                // Called programmatically, update based on type
+                document.querySelectorAll('.sort-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if ((type === 'snowfall' && btn.textContent.includes('Most Snow')) ||
+                        (type === 'distance' && btn.textContent.includes('Closest'))) {
+                        btn.classList.add('active');
+                    }
+                });
+            }
 
             // Sort resorts
             const sorted = [...resortsWithData].sort((a, b) => {
