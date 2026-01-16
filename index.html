@@ -242,7 +242,7 @@
             border-radius: 0;
             padding: 1.8rem;
             display: grid;
-            grid-template-columns: 60px 1fr auto;
+            grid-template-columns: 60px 1fr auto auto;
             gap: 1.5rem;
             align-items: center;
             box-shadow: 
@@ -322,6 +322,48 @@
             gap: 0.3rem;
         }
 
+        .current-conditions {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0 1rem;
+            border-left: 2px solid var(--glacier);
+        }
+
+        .weather-icon {
+            font-size: 2.5rem;
+            line-height: 1;
+        }
+
+        .current-temp {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            color: var(--deep-blue);
+            line-height: 1;
+        }
+
+        .snow-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+            font-size: 0.8rem;
+            color: var(--alpine-green);
+        }
+
+        .snow-stat {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            white-space: nowrap;
+        }
+
+        .snow-stat-value {
+            font-weight: 700;
+            color: var(--deep-blue);
+        }
+
         .snowfall-amount {
             font-family: 'Bebas Neue', sans-serif;
             font-size: 3.5rem;
@@ -379,11 +421,20 @@
                 padding: 1.3rem;
             }
 
+            .current-conditions {
+                grid-column: 1 / -1;
+                flex-direction: row;
+                justify-content: space-around;
+                border-left: none;
+                border-top: 2px solid var(--glacier);
+                padding: 1rem 0 0 0;
+                margin-top: 1rem;
+            }
+
             .snowfall-display {
                 grid-column: 2;
                 text-align: left;
                 align-items: flex-start;
-                margin-top: 0.5rem;
             }
 
             .flag {
@@ -449,6 +500,39 @@
         let resortsWithData = [];
         let debugInfo = [];
 
+        // Weather code to icon mapping (WMO Weather interpretation codes)
+        function getWeatherIcon(weatherCode) {
+            // WMO codes: https://open-meteo.com/en/docs
+            if (weatherCode === 0) return '☀️'; // Clear sky
+            if (weatherCode === 1 || weatherCode === 2) return '🌤️'; // Mainly clear, partly cloudy
+            if (weatherCode === 3) return '☁️'; // Overcast
+            if (weatherCode === 45 || weatherCode === 48) return '🌫️'; // Fog
+            if (weatherCode >= 51 && weatherCode <= 55) return '🌧️'; // Drizzle
+            if (weatherCode >= 56 && weatherCode <= 57) return '🌧️'; // Freezing drizzle
+            if (weatherCode >= 61 && weatherCode <= 65) return '🌧️'; // Rain
+            if (weatherCode >= 66 && weatherCode <= 67) return '🌧️'; // Freezing rain
+            if (weatherCode >= 71 && weatherCode <= 75) return '🌨️'; // Snow fall
+            if (weatherCode === 77) return '🌨️'; // Snow grains
+            if (weatherCode >= 80 && weatherCode <= 82) return '🌧️'; // Rain showers
+            if (weatherCode >= 85 && weatherCode <= 86) return '🌨️'; // Snow showers
+            if (weatherCode >= 95 && weatherCode <= 99) return '⛈️'; // Thunderstorm
+            return '☁️'; // Default
+        }
+
+        function getWeatherDescription(weatherCode) {
+            if (weatherCode === 0) return 'Clear';
+            if (weatherCode === 1 || weatherCode === 2) return 'Partly Cloudy';
+            if (weatherCode === 3) return 'Cloudy';
+            if (weatherCode === 45 || weatherCode === 48) return 'Foggy';
+            if (weatherCode >= 51 && weatherCode <= 57) return 'Drizzle';
+            if (weatherCode >= 61 && weatherCode <= 67) return 'Rain';
+            if (weatherCode >= 71 && weatherCode <= 77) return 'Snow';
+            if (weatherCode >= 80 && weatherCode <= 82) return 'Showers';
+            if (weatherCode >= 85 && weatherCode <= 86) return 'Snow Showers';
+            if (weatherCode >= 95) return 'Thunderstorm';
+            return 'Cloudy';
+        }
+
         async function fetchSnowfallData() {
             const loadingEl = document.getElementById('loadingMessage');
             const errorEl = document.getElementById('errorMessage');
@@ -464,7 +548,7 @@
             try {
                 // Test with just the first resort to diagnose issues
                 const testResort = resorts[0];
-                const testUrl = `https://api.open-meteo.com/v1/forecast?latitude=${testResort.lat}&longitude=${testResort.lon}&hourly=snowfall&timezone=Europe/Berlin&forecast_days=3`;
+                const testUrl = `https://api.open-meteo.com/v1/forecast?latitude=${testResort.lat}&longitude=${testResort.lon}&current=temperature_2m,weather_code,snow_depth&hourly=snowfall&daily=snowfall_sum&timezone=Europe/Berlin&forecast_days=7&past_days=14`;
                 
                 console.log('🧪 Testing API with first resort:', testResort.name);
                 console.log('📍 URL:', testUrl);
@@ -500,7 +584,8 @@
                 // Fetch data for all resorts with detailed logging
                 const promises = resorts.map(async (resort, index) => {
                     try {
-                        const url = `https://api.open-meteo.com/v1/forecast?latitude=${resort.lat}&longitude=${resort.lon}&hourly=snowfall&timezone=Europe/Berlin&forecast_days=3`;
+                        // Updated API call with current conditions, snow depth, and historical data
+                        const url = `https://api.open-meteo.com/v1/forecast?latitude=${resort.lat}&longitude=${resort.lon}&current=temperature_2m,weather_code,snow_depth&hourly=snowfall&daily=snowfall_sum&timezone=Europe/Berlin&forecast_days=7&past_days=14`;
                         
                         console.log(`🏔️ [${index + 1}/${resorts.length}] Fetching: ${resort.name}`);
                         
@@ -512,20 +597,45 @@
                         
                         const data = await response.json();
                         
-                        // Calculate total snowfall in next 72 hours (in cm)
-                        const snowfallData = data.hourly.snowfall || [];
-                        const totalSnowfallCm = snowfallData.reduce((sum, val) => sum + (val || 0), 0);
+                        // Current conditions
+                        const currentTemp = data.current.temperature_2m;
+                        const weatherCode = data.current.weather_code;
+                        const snowDepth = data.current.snow_depth || 0;
                         
-                        // Convert cm to inches
+                        // Calculate 72-hour snowfall forecast
+                        const snowfallData = data.hourly.snowfall || [];
+                        const next72Hours = snowfallData.slice(0, 72);
+                        const totalSnowfallCm = next72Hours.reduce((sum, val) => sum + (val || 0), 0);
                         const totalSnowfallInches = totalSnowfallCm / 2.54;
                         
-                        console.log(`✅ ${resort.name}: ${totalSnowfallInches.toFixed(1)}"`);
+                        // Calculate days since last snowfall
+                        const dailySnowfall = data.daily.snowfall_sum || [];
+                        let daysSinceSnow = 0;
+                        
+                        // Look backwards through daily data to find last snowfall
+                        for (let i = dailySnowfall.length - 1; i >= 0; i--) {
+                            if (dailySnowfall[i] > 0.5) { // More than 0.5cm counts as snowfall
+                                break;
+                            }
+                            daysSinceSnow++;
+                        }
+                        
+                        // Cap at 14 days (our data limit)
+                        if (daysSinceSnow >= dailySnowfall.length) {
+                            daysSinceSnow = 14;
+                        }
+                        
+                        console.log(`✅ ${resort.name}: ${totalSnowfallInches.toFixed(1)}", ${currentTemp}°C, ${snowDepth}cm depth`);
                         
                         debugInfo.push(`✅ ${resort.name}: ${totalSnowfallInches.toFixed(1)}"`);
                         
                         return {
                             ...resort,
                             snowfall: parseFloat(totalSnowfallInches.toFixed(1)),
+                            currentTemp: Math.round(currentTemp),
+                            weatherCode: weatherCode,
+                            snowDepth: Math.round(snowDepth / 2.54), // Convert cm to inches
+                            daysSinceSnow: daysSinceSnow,
                             success: true
                         };
                     } catch (err) {
@@ -535,6 +645,10 @@
                         return {
                             ...resort,
                             snowfall: 0,
+                            currentTemp: null,
+                            weatherCode: null,
+                            snowDepth: 0,
+                            daysSinceSnow: null,
                             error: true,
                             errorMessage: err.message
                         };
@@ -650,6 +764,40 @@
                 } else {
                     snowfallDisplay = `<div class="snowfall-amount">${resort.snowfall}"</div>`;
                 }
+
+                // Current conditions section
+                let currentConditionsHTML = '';
+                if (resort.success && resort.currentTemp !== null) {
+                    const weatherIcon = getWeatherIcon(resort.weatherCode);
+                    const weatherDesc = getWeatherDescription(resort.weatherCode);
+                    const tempF = Math.round((resort.currentTemp * 9/5) + 32);
+                    
+                    currentConditionsHTML = `
+                        <div class="current-conditions">
+                            <div>
+                                <div class="weather-icon" title="${weatherDesc}">${weatherIcon}</div>
+                                <div class="current-temp">${resort.currentTemp}°C</div>
+                                <div style="font-size: 0.75rem; color: var(--alpine-green);">(${tempF}°F)</div>
+                            </div>
+                            <div class="snow-stats">
+                                <div class="snow-stat" title="Current snow depth on mountain">
+                                    <span>❄️ Snowpack:</span>
+                                    <span class="snow-stat-value">${resort.snowDepth}"</span>
+                                </div>
+                                <div class="snow-stat" title="Days since last significant snowfall">
+                                    <span>📅 Last snow:</span>
+                                    <span class="snow-stat-value">${resort.daysSinceSnow === 0 ? 'Today' : resort.daysSinceSnow === 1 ? 'Yesterday' : resort.daysSinceSnow >= 14 ? '14+ days' : resort.daysSinceSnow + ' days ago'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if (resort.error) {
+                    currentConditionsHTML = `
+                        <div class="current-conditions">
+                            <span style="font-size: 0.9rem; color: #CC0000;">Data unavailable</span>
+                        </div>
+                    `;
+                }
                 
                 card.innerHTML = `
                     <div class="flag">${resort.country}</div>
@@ -658,6 +806,7 @@
                         <div class="resort-name">${resort.name}</div>
                         <div class="distance">${resort.distance} km from Munich</div>
                     </div>
+                    ${currentConditionsHTML}
                     <div class="snowfall-display">
                         ${snowfallDisplay}
                         <div class="snowfall-label">72hr Forecast</div>
